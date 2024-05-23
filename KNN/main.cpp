@@ -8,11 +8,11 @@
 #include <conio.h>
 
 // 初始化绘图窗口大小
-const int WINDOW_WIDTH = 480;
-const int WINDOW_HEIGHT = 480;
+const int WINDOW_WIDTH = 640;
+const int WINDOW_HEIGHT = 640;
 
 // 定义画笔大小
-const int PEN_SIZE = 2;
+const int PEN_SIZE = 8;
 
 #define MAX_DIGIT 1000
 #define MAX_FEATURE 256
@@ -54,9 +54,9 @@ int Transform_Pixel(int x, int y)
 {
     int sum = 0;
     int color;
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 20; i++)
     {
-        for (int j = 0; j < 10; j++)
+        for (int j = 0; j < 20; j++)
         {
             color = getpixel(x + i, y + j);
             if (color == 0xffffff)
@@ -70,7 +70,7 @@ int Transform_Pixel(int x, int y)
         }
     }
     double avg = (double)sum / 100;
-    if (avg > 0.7)
+    if (avg > 0.4)
     {
         return 1;
     }
@@ -88,21 +88,21 @@ int Transform_Pixel(int x, int y)
 */
 void Turn_Picture_to_txt()
 {
-    int Tarry[48][48];
+    int Tarry[32][32];
     int i = 0;
-    for (int i = 0; i < 48; i++)
+    for (int i = 0; i < 32; i++)
     {
-        for (int j = 0; j < 48; j++)
+        for (int j = 0; j < 32; j++)
         {
-            Tarry[i][j] = Transform_Pixel(i * 10, j * 10);
+            Tarry[i][j] = Transform_Pixel(i * 20, j * 20);
         }
     }
     FILE* fp = fopen("target.txt", "w");
-    for (int i = 0; i < 48; i++)
+    for (int i = 0; i < 32; i++)
     {
-        for (int j = 0; j < 48; j++)
+        for (int j = 0; j < 32; j++)
         {
-            fprintf(fp, "%d", Tarry[i][j]);
+            fprintf(fp, "%d", Tarry[j][i]);
         }
         fprintf(fp, "\n");
     }
@@ -191,44 +191,12 @@ void KNN(DATA* data, int num, int k, float* result)
     free(label); // 释放标签数组的内存
 }
 
-int main()
+void Draw()
 {
-    // 初始化图形窗口
-    initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
-
-    // 设置背景颜色为白色
-    setbkcolor(WHITE);
-    cleardevice();
-
-    // 设置画笔颜色为黑色
-    setlinecolor(BLACK);
-    setfillcolor(BLACK);
-
     bool drawing = false;
     int x = 0, y = 0;
-
-
     while (true)
     {
-        // 检查是否有键盘输入
-        if (_kbhit())
-        {
-            char ch = _getch();
-            switch (ch)
-            {
-            case 29: // 按下ESC键退出程序
-                printf("Program exited.");
-                exit(0);
-                break;
-            case 'c': // 按下C键清空画板
-                cleardevice();
-                break;
-            case 's': // 按下S键识别数字
-                Turn_Picture_to_txt();
-                break;
-            }
-        }
-
         // 获取鼠标状态
         MOUSEMSG msg = GetMouseMsg();
 
@@ -257,7 +225,54 @@ int main()
         case WM_LBUTTONUP:
             drawing = false;
             break;
+        case WM_RBUTTONDOWN:
+            goto Enddraw;
         }
+    }
+    Enddraw:BeginBatchDraw();
+    EndBatchDraw();
+}
+
+int main()
+{
+    // 初始化图形窗口
+    initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    // 设置背景颜色为白色
+    setbkcolor(WHITE);
+    cleardevice();
+
+    // 设置画笔颜色为黑色
+    setlinecolor(BLACK);
+    setfillcolor(BLACK);
+
+    ExMessage mskey;
+    while (true)
+    {
+        // 检查是否有键盘输入
+        if (peekmessage(&mskey,EX_KEY,true))
+        {
+            switch (mskey.vkcode)
+            {
+            case 0x1B: // 按下ESC键退出程序
+                printf("Program exited.");
+                exit(0);
+                break;
+            case 0x43: // 按下C键清空画板
+                cleardevice();
+                break;
+            case 0x53: //按下S键开始画图
+                Draw();
+                break;
+            case 0x52: // 按下R键识别数字
+                FlushBatchDraw();
+                Turn_Picture_to_txt();
+                FILE* fp;
+                fp = fopen("testDigits/0_0.txt","r");
+                break;
+            }
+        }
+        flushmessage();
     }
 
     // 关闭图形窗口
