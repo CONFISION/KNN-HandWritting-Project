@@ -1,5 +1,4 @@
 #include <graphics.h>
-#include <conio.h>
 #include "KNN.cpp"
 
 // 初始化绘图窗口大小
@@ -9,7 +8,7 @@ const int WINDOW_HEIGHT = 480;
 // 定义画笔大小
 const int PEN_SIZE = 2;
 
-int main() 
+int main()
 {
     // 初始化图形窗口
     initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -25,25 +24,31 @@ int main()
     bool drawing = false;
     int x = 0, y = 0;
 
-    while (true) 
+    while (true)
     {
+        ExMessage msKey;
         // 检查是否有键盘输入
-        if (_kbhit()) {
-            int ch = _getch();
-            if (ch == 27) 
-            { // ESC键退出
+        if (peekmessage(&msKey, EX_KEY, removemsg = true))
+        {
+            switch (msKey.vkcode)
+            {
+            case: 0x1B : // 按下ESC键退出程序
+                printf("Program exited.");
+                exit(0);
                 break;
-            }
-            else if (ch == 'c' || ch == 'C') 
-            { // 'c'键清除窗口
+            case: 0x43 : // 按下C键清空画板
                 cleardevice();
+                break;
+            case: 0x53 : // 按下S键识别数字
+                Turn_Picture_to_txt() 
+                break;
             }
         }
 
         // 获取鼠标状态
         MOUSEMSG msg = GetMouseMsg();
 
-        switch (msg.uMsg) 
+        switch (msg.uMsg)
         {
         case WM_LBUTTONDOWN:
             drawing = true;
@@ -51,11 +56,13 @@ int main()
             y = msg.y;
             break;
         case WM_MOUSEMOVE:
-            if (drawing) 
+            if (drawing)
             {
                 // 绘制小圆点
-                for (int i = -PEN_SIZE; i <= PEN_SIZE; ++i) {
-                    for (int j = -PEN_SIZE; j <= PEN_SIZE; ++j) {
+                for (int i = -PEN_SIZE; i <= PEN_SIZE; ++i)
+                {
+                    for (int j = -PEN_SIZE; j <= PEN_SIZE; ++j)
+                    {
                         putpixel(x + i, y + j, BLACK);
                     }
                 }
