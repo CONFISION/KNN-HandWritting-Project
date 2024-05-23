@@ -32,15 +32,15 @@ int main()
         {
             switch (msKey.vkcode)
             {
-            case: 0x1B : // 按下ESC键退出程序
+            case 0x1B: // 按下ESC键退出程序
                 printf("Program exited.");
                 exit(0);
                 break;
-            case: 0x43 : // 按下C键清空画板
+            case 0x43: // 按下C键清空画板
                 cleardevice();
                 break;
-            case: 0x53 : // 按下S键识别数字
-                Turn_Picture_to_txt() 
+            case 0x53: // 按下S键识别数字
+                Turn_Picture_to_txt();
                 break;
             }
         }
