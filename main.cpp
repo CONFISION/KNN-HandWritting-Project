@@ -1,5 +1,6 @@
 #include <graphics.h>
 #include <conio.h>
+#include "KNN.cpp"
 
 // 初始化绘图窗口大小
 const int WINDOW_WIDTH = 480;

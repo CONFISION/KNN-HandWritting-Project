@@ -1,13 +1,17 @@
 // KNN实现手写数字识别
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <graphics.h>
+#include <conio.h>
 
 #define MAX_DIGIT 1000
 #define MAX_FEATURE 256
 #define MAX_K 10
+#define png_sig_size = 8; // PNG 文件头的长度
+#define GraphicWigth 480;
+#define GraphicHeigth 480;
 
 typedef struct
 {
@@ -25,6 +29,75 @@ int cmp(const void *a, const void *b)
     DATA *da = (DATA *)a;         // 将指针a强制转换为DATA类型指针
     DATA *db = (DATA *)b;         // 将指针b强制转换为DATA类型指针
     return da->label - db->label; // 返回两个数据结构中label值的差
+}
+
+/*
+函数：getpixel
+参数：
+    - pMem：图像内存指针
+    - i：行坐标
+    - j：列坐标
+功能：计算像素块的值
+返回值：
+    -0：白色
+    -1：黑色
+*/
+int Transform_Pixel(int x, int y)
+{
+    int sum = 0;
+    int color;
+    for (int i = 0; i < 10; i++)
+    {
+        for (int j = 0; j < 10; j++)
+        {
+            color = getpixel(x + i, y + j);
+            if (color == 0xffffff)
+            {
+                sum += 0;
+            }
+            else if (color == 0x000000)
+            {
+                sum += 1;
+            }
+        }
+    }
+    double avg = (double)sum / 100;
+    if (avg > 0.7)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+/*
+函数：Turn_Picture_to_txt
+参数：
+    - filename: png文件名
+功能：读取绘图区数据处理成txt文件
+*/
+void Turn_Picture_to_txt()
+{
+    int Tarry[48][48];
+    int i = 0;
+    for (int i = 0; i < 48; i++)
+    {
+        for (int j = 0; j < 48; j++)
+        {
+            Tarry[i][j] = Transform_Pixel(i * 10, j * 10);
+        }
+    }
+    FILE *fp = fopen("target.txt", "w");
+    for (int i = 0; i < 48; i++)
+    {
+        for (int j = 0; j < 48; j++)
+        {
+            fprintf(fp, "%d", Tarry[i][j]);
+        }
+    }
+    fclose(fp);
 }
 
 /*
@@ -74,7 +147,7 @@ void read_data(char *filename, DATA *data, int *num)
    功能：
         根据k最近邻算法对给定的数据集进行分类
 */
-void knn(DATA *data, int num, int k, float *result)
+void KNN(DATA *data, int num, int k, float *result)
 {
     int i, j, m, n;
     float dist, min_dist;
@@ -116,7 +189,7 @@ int main()
     read_data("d:/homework/digits.txt", data, &num);
     int k = 3;
     float result[MAX_DIGIT];
-    knn(data, num, k, result);
+    KNN(data, num, k, result);
     int correct = 0;
     for (int i = 0; i < num; i++)
     {
