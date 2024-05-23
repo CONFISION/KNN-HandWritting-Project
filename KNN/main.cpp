@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <graphics.h>
 #include "KNN.cpp"
 
@@ -28,7 +29,7 @@ int main()
     {
         ExMessage msKey;
         // 检查是否有键盘输入
-        if (peekmessage(&msKey, EX_KEY, removemsg = true))
+        if (peekmessage(&msKey, EX_KEY,true))
         {
             switch (msKey.vkcode)
             {
