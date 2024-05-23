@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KNN", "KNN.vcxproj", "{B9AF12D1-E664-43FC-8772-2B77E0239386}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B9AF12D1-E664-43FC-8772-2B77E0239386}.Debug|x64.ActiveCfg = Debug|x64
+		{B9AF12D1-E664-43FC-8772-2B77E0239386}.Debug|x64.Build.0 = Debug|x64
+		{B9AF12D1-E664-43FC-8772-2B77E0239386}.Debug|x86.ActiveCfg = Debug|Win32
+		{B9AF12D1-E664-43FC-8772-2B77E0239386}.Debug|x86.Build.0 = Debug|Win32
+		{B9AF12D1-E664-43FC-8772-2B77E0239386}.Release|x64.ActiveCfg = Release|x64
+		{B9AF12D1-E664-43FC-8772-2B77E0239386}.Release|x64.Build.0 = Release|x64
+		{B9AF12D1-E664-43FC-8772-2B77E0239386}.Release|x86.ActiveCfg = Release|Win32
+		{B9AF12D1-E664-43FC-8772-2B77E0239386}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BE450B3D-BB44-4E86-AE94-6CA75651DC64}
+	EndGlobalSection
+EndGlobal

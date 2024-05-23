@@ -14,12 +14,9 @@ const int WINDOW_HEIGHT = 640;
 // 定义画笔大小
 const int PEN_SIZE = 8;
 
-#define MAX_DIGIT 1000
+#define MAX_DIGIT 1024
 #define MAX_FEATURE 256
 #define MAX_K 10
-#define png_sig_size = 8; // PNG 文件头的长度
-#define GraphicWigth 480;
-#define GraphicHeigth 480;
 
 typedef struct
 {
@@ -40,7 +37,7 @@ int cmp(const void* a, const void* b)
 }
 
 /*
-函数：getpixel
+函数：Transform_Pixel
 参数：
     - pMem：图像内存指针
     - i：行坐标
@@ -250,29 +247,26 @@ int main()
     while (true)
     {
         // 检查是否有键盘输入
-        if (peekmessage(&mskey,EX_KEY,true))
+        mskey = getmessage(EX_KEY);
+        switch (mskey.vkcode)
         {
-            switch (mskey.vkcode)
-            {
-            case 0x1B: // 按下ESC键退出程序
-                printf("Program exited.");
-                exit(0);
-                break;
-            case 0x43: // 按下C键清空画板
-                cleardevice();
-                break;
-            case 0x53: //按下S键开始画图
-                Draw();
-                break;
-            case 0x52: // 按下R键识别数字
-                FlushBatchDraw();
-                Turn_Picture_to_txt();
-                FILE* fp;
-                fp = fopen("testDigits/0_0.txt","r");
-                break;
-            }
+        case 0x1B: // 按下ESC键退出程序
+            printf("Program exited.");
+            exit(0);
+            break;
+        case 0x43: // 按下C键清空画板
+            cleardevice();
+            break;
+        case 0x53: //按下S键开始画图
+            Draw();
+            break;
+        case 0x52: // 按下R键识别数字
+            FlushBatchDraw();
+            Turn_Picture_to_txt();
+            break;
         }
-        flushmessage();
+        flushmessage(EX_KEY);
+        Sleep(30);
     }
 
     // 关闭图形窗口
