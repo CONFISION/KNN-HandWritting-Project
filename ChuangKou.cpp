@@ -6,9 +6,10 @@ const int WINDOW_WIDTH = 480;
 const int WINDOW_HEIGHT = 480;
 
 // 定义画笔大小
-const int PEN_SIZE = 5;
+const int PEN_SIZE = 2;
 
-int main() {
+int main() 
+{
     // 初始化图形窗口
     initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -23,25 +24,34 @@ int main() {
     bool drawing = false;
     int x = 0, y = 0;
 
-    while (true) {
-        // 检查是否有键盘输入，ESC键退出
+    while (true) 
+    {
+        // 检查是否有键盘输入
         if (_kbhit()) {
-            if (_getch() == 27) {
+            int ch = _getch();
+            if (ch == 27) 
+            { // ESC键退出
                 break;
+            }
+            else if (ch == 'c' || ch == 'C') 
+            { // 'c'键清除窗口
+                cleardevice();
             }
         }
 
         // 获取鼠标状态
         MOUSEMSG msg = GetMouseMsg();
 
-        switch (msg.uMsg) {
+        switch (msg.uMsg) 
+        {
         case WM_LBUTTONDOWN:
             drawing = true;
             x = msg.x;
             y = msg.y;
             break;
         case WM_MOUSEMOVE:
-            if (drawing) {
+            if (drawing) 
+            {
                 // 绘制小圆点
                 for (int i = -PEN_SIZE; i <= PEN_SIZE; ++i) {
                     for (int j = -PEN_SIZE; j <= PEN_SIZE; ++j) {
