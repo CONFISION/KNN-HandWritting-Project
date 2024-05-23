@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <graphics.h>
-#include <conio.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <direct.h>
 
 // 初始化绘图窗口大小
 const int WINDOW_WIDTH = 640;
@@ -17,11 +19,15 @@ const int PEN_SIZE = 8;
 #define MAX_DIGIT 1024
 #define MAX_FEATURE 256
 #define MAX_K 10
+#define PATH_LENTH 256
 
-typedef struct
+char path[] = "E:/KNN-HandWritting-Project/KNN/trainingDigits/";
+
+typedef struct data
 {
     int label;
-    float feature[MAX_FEATURE];
+    int feature[MAX_DIGIT];
+    struct data *next = NULL;
 } DATA;
 
 /*
@@ -107,40 +113,90 @@ void Turn_Picture_to_txt()
 }
 
 /*
-函数：read_data
-参数：
-    - filename: 文件名
-    - data: 数据结构指针
-    - num: 读取的数据数量指针
-功能：读取数据并存储在指定的数据结构中
+函数：get_lable
+参数：-filename[]
+功能：从文件名中获取标签值
+返回值:int lable
 */
-void read_data(char* filename, DATA* data, int* num)
+int Get_FileLable(char* filename)
 {
-    FILE* fp = fopen(filename, "r");
+    char tamp = filename[0];
+    int lable = tamp - '0';
+    return lable;
+}
+
+/*
+函数：txt2vector
+参数：-filename
+功能：把txt文件向量化
+返回：-DATA
+*/
+void txt2vector(struct dirent *ptr,DATA *pdata)
+{
+    char filename[PATH_LENTH];
+    memset(filename, 0, sizeof(char));
+    /*char buffer[1024];
+    _getcwd(buffer, 1024);
+    printf("%s", buffer);*/
+    strcat(filename, path);
+    strcat(filename, ptr->d_name);
+    FILE *fp;
+    fp = fopen(filename, "r");
     if (fp == NULL)
     {
-        printf("Error: cannot open file %s\n", filename);
-        exit(1);
+        perror("Can not open target file");
     }
-    int i, j;
-    char label[10];
-    float feature[MAX_FEATURE];
-    while (fgets(label, 10, fp) != NULL)
+    int ch;
+    int cur = 0;
+    ch = fgetc(fp);
+    while (ch != EOF)
     {
-        sscanf(label, "%d", &data[*num].label); // 从文件中读取标签并存储在数据结构中
-        for (i = 0; i < MAX_FEATURE; i++)
+        if (ch != '\n')
         {
-            if (fgets(label, 10, fp) == NULL)
-                break;
-            sscanf(label, "%f", &feature[i]); // 从文件中读取特征并存储在临时数组中
+            pdata->feature[cur] = ch - '0';
+            cur++;
         }
-        for (i = 0; i < MAX_FEATURE; i++)
-        {
-            data[*num].feature[i] = feature[i]; // 将临时数组中的特征存储在数据结构中
-        }
-        (*num)++; // 增加数据数量计数器
+        ch = fgetc(fp);
     }
-    fclose(fp); // 关闭文件流
+    fclose(fp);
+}
+
+/*
+函数：Train_DataSet
+参数：无
+功能：训练数据并且返回
+返回值：
+*/
+
+void Train_DataSet(DATA *phead)
+{
+    DATA *pcur = phead;
+    DATA *pdata = NULL;
+    DIR *dir = opendir("E:\\KNN-HandWritting-Project\\KNN\\trainingDigits");
+    struct dirent *ptr;
+    ptr = readdir(dir);
+    while (ptr->d_name[0] == '.')
+    {
+        ptr = readdir(dir);
+    }
+    while (ptr != NULL)
+    {
+        pdata = (DATA *)malloc(sizeof(DATA));
+        pdata->label = Get_FileLable(ptr->d_name);
+        txt2vector(ptr,pdata);
+        if (phead == NULL)
+        {
+            phead = pdata;
+            pdata->next = NULL;
+            pcur = phead;
+        }
+        else
+        {
+            pcur->next = pdata;
+            pcur = pdata;
+            pcur->next = NULL;
+        }
+    }
 }
 
 /*
@@ -188,6 +244,10 @@ void KNN(DATA* data, int num, int k, float* result)
     free(label); // 释放标签数组的内存
 }
 
+/*
+函数：Draw
+功能：打开绘图版，绘制数字
+*/
 void Draw()
 {
     bool drawing = false;
@@ -242,8 +302,10 @@ int main()
     // 设置画笔颜色为黑色
     setlinecolor(BLACK);
     setfillcolor(BLACK);
-
+    
+    DATA *pTrain = NULL;
     ExMessage mskey;
+
     while (true)
     {
         // 检查是否有键盘输入
@@ -263,6 +325,7 @@ int main()
         case 0x52: // 按下R键识别数字
             FlushBatchDraw();
             Turn_Picture_to_txt();
+            Train_DataSet(pTrain);
             break;
         }
         flushmessage(EX_KEY);
