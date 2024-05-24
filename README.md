@@ -6,6 +6,10 @@
 
 Because the libary EasyX **only work on the C++ language**, so we need to use the C++ compiler to compile it.But the grammer we used is **C**.If you can use a **C based GUI library**, you can use the C compiler to compile the project.
 
+## Somechange in Leatest update
+
+In the latest update,we add an args,it's default value is 0 which means the program will run without GUI.So that you can compil it with C compiler and run it on the command line.If you want to run it with GUI,you can set the args to 1.
+
 ## What is KNN?
 
 KNN (K-Nearest Neighbors) is a type of supervised learning algorithm that can be used for both classification and regression problems. In this project, we will use KNN to classify handwritten digits.
