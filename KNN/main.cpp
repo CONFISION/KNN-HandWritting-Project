@@ -1,6 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
 
-#include <graphics.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,16 +7,16 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <direct.h>
+#include <math.h>
 
 // 初始化绘图窗口大小
 const int WINDOW_WIDTH = 640;
 const int WINDOW_HEIGHT = 640;
 
 // 定义画笔大小
-const int PEN_SIZE = 8;
+const int PEN_SIZE = 15;
 
 #define MAX_DIGIT 1024
-#define MAX_FEATURE 256
 #define MAX_K 10
 #define PATH_LENTH 256
 
@@ -113,7 +112,7 @@ void Turn_Picture_to_txt()
 }
 
 /*
-函数：get_lable
+函数：Get_FileLable
 参数：-filename[]
 功能：从文件名中获取标签值
 返回值:int lable
@@ -168,13 +167,15 @@ void txt2vector(struct dirent *ptr,DATA *pdata)
 返回值：
 */
 
-void Train_DataSet(DATA *phead)
+DATA *Train_DataSet(DATA *phead)
 {
+    printf("Start training\n");
     DATA *pcur = phead;
     DATA *pdata = NULL;
     DIR *dir = opendir("E:\\KNN-HandWritting-Project\\KNN\\trainingDigits");
     struct dirent *ptr;
     ptr = readdir(dir);
+    int count = 1;
     while (ptr->d_name[0] == '.')
     {
         ptr = readdir(dir);
@@ -196,7 +197,49 @@ void Train_DataSet(DATA *phead)
             pcur = pdata;
             pcur->next = NULL;
         }
+        ptr = readdir(dir);
     }
+    printf("Training success\n");
+    return phead;
+}
+
+/*
+函数：Len_DataSet
+参数：DATA *phead
+功能：获得训练集的长度
+返回值：int lenth
+*/
+int Len_DataSet(DATA* phead)
+{
+    DATA* cur = phead;
+    int count=0;
+    while (cur != NULL)
+    {
+        count++;
+        cur = cur->next;
+    }
+    return count;
+}
+
+/*
+函数：Euclidean_Distance
+参数：
+功能：计算识别数据和测试数据之间的欧式距离
+返回值：distance
+*/
+
+float Eucliden_Distance(DATA *pdata,DATA *ptrain)
+{
+    int i = 0;
+    float distance = -1;
+    while (i < MAX_DIGIT)
+    {
+        distance += pow(pdata->feature[i] - ptrain->feature[i], 2);
+        i++;
+    }
+    distance = sqrt(distance);
+
+    return distance;
 }
 
 /*
@@ -209,39 +252,72 @@ void Train_DataSet(DATA *phead)
    功能：
         根据k最近邻算法对给定的数据集进行分类
 */
-void KNN(DATA* data, int num, int k, float* result)
+int KNN(DATA* pTrain, int k)
 {
-    int i, j, m, n;
-    float dist, min_dist;
-    DATA* train;
-    int* label;
-    train = (DATA*)malloc(num * sizeof(DATA)); // 分配内存以存储训练数据
-    label = (int*)malloc(num * sizeof(int));   // 分配内存以存储标签
-    for (i = 0; i < num; i++)
+    //先把目标数据向量化
+    DATA* pData = (DATA*)malloc(sizeof(DATA));
+    pData->label = -1;
+    pData->next = NULL;
+    FILE* fp = fopen("E:/KNN-HandWritting-Project/KNN/target.txt", "r");
+    if (fp == NULL)
     {
-        train[i] = data[i];       // 将数据复制到训练数据中
-        label[i] = data[i].label; // 将标签复制到标签数组中
+        perror("Can not open target.txt file");
+        exit(0);
     }
-    qsort(train, num, sizeof(DATA), cmp); // 对训练数据进行排序
-    for (i = 0; i < num; i++)
+    int ch;
+    int cur = 0;
+    ch = fgetc(fp);
+    while (ch != EOF)
     {
-        min_dist = 1e10; // 初始化最小距离为一个较大的值
-        for (j = 0; j < k; j++)
+        if (ch != '\n')
         {
-            dist = 0.0; // 初始化距离为0
-            for (m = 0; m < MAX_FEATURE; m++)
+            pData->feature[cur] = ch - '0';
+            cur++;
+        }
+        ch = fgetc(fp);
+    }
+    fclose(fp);
+
+    int DataSetLenth = Len_DataSet(pTrain);
+    float All_distance[2000];
+    memset(All_distance, -1, sizeof(float));
+    int all_lable[2000];
+    memset(all_lable, -1, sizeof(int));
+
+    cur = 0;
+    DATA* pcur = pTrain;
+    while (cur < DataSetLenth && pcur != NULL)
+    {
+        All_distance[cur] = Eucliden_Distance(pData, pcur);
+        all_lable[cur] = pcur->label;
+        pcur = pcur->next;
+        cur++;
+        //printf("prograssing...... %d/%d\n", cur,DataSetLenth);
+    }
+
+    float minDistance[3] = {1024,1024,1024};  //K=3
+    int minlable[3] = { -1,-1,-1 };
+    cur = 0;
+    while (cur < DataSetLenth)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (All_distance[cur] < minDistance[i])
             {
-                dist += (train[i].feature[m] - data[j].feature[m]) * (train[i].feature[m] - data[j].feature[m]); // 计算欧几里得距离的平方
-            }
-            if (dist < min_dist)
-            {
-                min_dist = dist;      // 更新最小距离
-                result[i] = label[j]; // 将对应数据的标签作为此数据项的分类结果
+                minDistance[i] = All_distance[cur];
+                minlable[i] = all_lable[cur];
+                break;
             }
         }
+        cur++;
     }
-    free(train); // 释放训练数据的内存
-    free(label); // 释放标签数组的内存
+    free(pData);
+    printf("The 3 nearest neighbour:\n");
+    for (int i = 0; i < 3; i++)
+    {
+        printf("Distance:%.4f Lable:%d\n", minDistance[i], minlable[i]);
+    }
+    return minlable[0];
 }
 
 /*
@@ -305,6 +381,8 @@ int main()
     
     DATA *pTrain = NULL;
     ExMessage mskey;
+    
+    pTrain=Train_DataSet(pTrain);
 
     while (true)
     {
@@ -325,7 +403,8 @@ int main()
         case 0x52: // 按下R键识别数字
             FlushBatchDraw();
             Turn_Picture_to_txt();
-            Train_DataSet(pTrain);
+            int classfiyresult = KNN(pTrain,3);
+            printf("The Digitis is %d\n", classfiyresult);
             break;
         }
         flushmessage(EX_KEY);
