@@ -8,6 +8,7 @@
 #include <dirent.h>
 #include <direct.h>
 #include <math.h>
+#include <conio.h>
 
 // 初始化绘图窗口大小
 const int WINDOW_WIDTH = 640;
@@ -19,8 +20,12 @@ const int PEN_SIZE = 15;
 #define MAX_DIGIT 1024
 #define MAX_K 10
 #define PATH_LENTH 256
+#define DEFAULTARGS 0
 
 char path[] = "E:/KNN-HandWritting-Project/KNN/trainingDigits/";
+
+char defaulttrainpath[] = "trainingDigits/";
+char defaulttestpath[] = "testDigits/";
 
 typedef struct data
 {
@@ -160,6 +165,33 @@ void txt2vector(struct dirent *ptr,DATA *pdata)
     fclose(fp);
 }
 
+void DEFAULT_txt2vector(struct dirent* ptr, DATA* pdata)
+{
+    char filename[PATH_LENTH];
+    memset(filename, 0, sizeof(char));
+    strcat(filename, defaulttrainpath);
+    strcat(filename, ptr->d_name);
+    FILE* fp;
+    fp = fopen(filename, "r");
+    if (fp == NULL)
+    {
+        perror("Can not open target file");
+    }
+    int ch;
+    int cur = 0;
+    ch = fgetc(fp);
+    while (ch != EOF)
+    {
+        if (ch != '\n')
+        {
+            pdata->feature[cur] = ch - '0';
+            cur++;
+        }
+        ch = fgetc(fp);
+    }
+    fclose(fp);
+}
+
 /*
 函数：Train_DataSet
 参数：无
@@ -184,7 +216,7 @@ DATA *Train_DataSet(DATA *phead)
     {
         pdata = (DATA *)malloc(sizeof(DATA));
         pdata->label = Get_FileLable(ptr->d_name);
-        txt2vector(ptr,pdata);
+        DEFAULT_txt2vector(ptr, pdata);
         if (phead == NULL)
         {
             phead = pdata;
@@ -198,6 +230,44 @@ DATA *Train_DataSet(DATA *phead)
             pcur->next = NULL;
         }
         ptr = readdir(dir);
+    }
+    printf("Training success\n");
+    return phead;
+}
+
+DATA *DEFAULT_Train_DataSet(DATA* phead)
+{
+    printf("Start training\n");
+    DATA* pcur = phead;
+    DATA* pdata = NULL;
+    DIR* dir = opendir("trainingDigits");
+    struct dirent* ptr;
+    ptr = readdir(dir);
+    int count = 1;
+    while (ptr->d_name[0] == '.')
+    {
+        ptr = readdir(dir);
+    }
+    while (ptr != NULL)
+    {
+        pdata = (DATA*)malloc(sizeof(DATA));
+        pdata->label = Get_FileLable(ptr->d_name);
+        txt2vector(ptr, pdata);
+        if (phead == NULL)
+        {
+            phead = pdata;
+            pdata->next = NULL;
+            pcur = phead;
+        }
+        else
+        {
+            pcur->next = pdata;
+            pcur = pdata;
+            pcur->next = NULL;
+        }
+        ptr = readdir(dir);
+        printf("training... %d/1934\n",count);
+        count++;
     }
     printf("Training success\n");
     return phead;
@@ -320,6 +390,69 @@ int KNN(DATA* pTrain, int k)
     return minlable[0];
 }
 
+int DEFAULT_KNN_ALGORITHMS(DATA *pTrain,char *filename)
+{
+    //先把目标数据向量化
+    DATA* pData = (DATA*)malloc(sizeof(DATA));
+    pData->label = -1;
+    pData->next = NULL;
+    FILE* fp = fopen(filename, "r");
+    if (fp == NULL)
+    {
+        perror("Can not open target.txt file");
+        exit(0);
+    }
+    int ch;
+    int cur = 0;
+    ch = fgetc(fp);
+    while (ch != EOF)
+    {
+        if (ch != '\n')
+        {
+            pData->feature[cur] = ch - '0';
+            cur++;
+        }
+        ch = fgetc(fp);
+    }
+    fclose(fp);
+
+    int DataSetLenth = Len_DataSet(pTrain);
+    float All_distance[2000];
+    memset(All_distance, -1, sizeof(float));
+    int all_lable[2000];
+    memset(all_lable, -1, sizeof(int));
+
+    cur = 0;
+    DATA* pcur = pTrain;
+    while (cur < DataSetLenth && pcur != NULL)
+    {
+        All_distance[cur] = Eucliden_Distance(pData, pcur);
+        all_lable[cur] = pcur->label;
+        pcur = pcur->next;
+        cur++;
+        //printf("prograssing...... %d/%d\n", cur,DataSetLenth);
+    }
+
+    float minDistance[3] = { 1024,1024,1024 };  //K=3
+    int minlable[3] = { -1,-1,-1 };
+    cur = 0;
+    while (cur < DataSetLenth)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (All_distance[cur] < minDistance[i])
+            {
+                minDistance[i] = All_distance[cur];
+                minlable[i] = all_lable[cur];
+                break;
+            }
+        }
+        cur++;
+    }
+    free(pData);
+    return minlable[0];
+}
+
 /*
 函数：Draw
 功能：打开绘图版，绘制数字
@@ -368,50 +501,103 @@ void Draw()
 
 int main()
 {
-    // 初始化图形窗口
-    initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
-
-    // 设置背景颜色为白色
-    setbkcolor(WHITE);
-    cleardevice();
-
-    // 设置画笔颜色为黑色
-    setlinecolor(BLACK);
-    setfillcolor(BLACK);
+    int args = DEFAULTARGS;
     
-    DATA *pTrain = NULL;
-    ExMessage mskey;
-    
-    pTrain=Train_DataSet(pTrain);
-
-    while (true)
+    if (args == DEFAULTARGS)
     {
-        // 检查是否有键盘输入
-        mskey = getmessage(EX_KEY);
-        switch (mskey.vkcode)
-        {
-        case 0x1B: // 按下ESC键退出程序
-            printf("Program exited.");
-            exit(0);
-            break;
-        case 0x43: // 按下C键清空画板
-            cleardevice();
-            break;
-        case 0x53: //按下S键开始画图
-            Draw();
-            break;
-        case 0x52: // 按下R键识别数字
-            FlushBatchDraw();
-            Turn_Picture_to_txt();
-            int classfiyresult = KNN(pTrain,3);
-            printf("The Digitis is %d\n", classfiyresult);
-            break;
-        }
-        flushmessage(EX_KEY);
-        Sleep(30);
-    }
+        DATA *pTrain = NULL;
+        pTrain = DEFAULT_Train_DataSet(pTrain);
 
-    // 关闭图形窗口
-    closegraph();
-    return 0;
+        char filename[PATH_LENTH];
+        memset(filename, 0, sizeof(char));
+
+        int lable[2000];
+        int afterlable[2000];
+        memset(lable, -1, sizeof(int));
+        memset(afterlable, -1, sizeof(int));
+
+        DIR* dir = opendir("testDigits");
+        struct dirent* ptr;
+        ptr = readdir(dir);
+        while (ptr->d_name[0] == '.')
+        {
+            ptr = readdir(dir);
+        }
+        printf("\n");
+        int cur = 0;
+        while (ptr != NULL)
+        {
+            strcat(filename, defaulttestpath);
+            strcat(filename, ptr->d_name);
+            lable[cur] = Get_FileLable(ptr->d_name);
+            afterlable[cur] = DEFAULT_KNN_ALGORITHMS(pTrain, filename);
+            printf("loartestDigits.. %d\n", cur);
+            memset(filename, 0, sizeof(char));
+            ptr = readdir(dir);
+            cur++;
+        }
+        printf("\n");
+        cur = 0;
+        float wrong = 0;
+        while (cur < 946)
+        {
+            printf("testdigits is:%d  recognizedigits is:%d\n", lable[cur], afterlable[cur]);
+            if (lable[cur] != afterlable[cur])
+            {
+                wrong++;
+            }
+            cur++;
+        }
+        printf("accuracy %.2f ", 1 - wrong / cur);
+        _getch();
+    }
+    else
+    {
+        // 初始化图形窗口
+        initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        // 设置背景颜色为白色
+        setbkcolor(WHITE);
+        cleardevice();
+
+        // 设置画笔颜色为黑色
+        setlinecolor(BLACK);
+        setfillcolor(BLACK);
+
+        DATA *pTrain = NULL;
+        pTrain = Train_DataSet(pTrain);
+        
+        ExMessage mskey;
+
+        while (true)
+        {
+            // 检查是否有键盘输入
+            mskey = getmessage(EX_KEY);
+            switch (mskey.vkcode)
+            {
+            case 0x1B: // 按下ESC键退出程序
+                printf("Program exited.");
+                exit(0);
+                break;
+            case 0x43: // 按下C键清空画板
+                cleardevice();
+                break;
+            case 0x53: //按下S键开始画图
+                Draw();
+                break;
+            case 0x52: // 按下R键识别数字
+                FlushBatchDraw();
+                Turn_Picture_to_txt();
+                int classfiyresult = KNN(pTrain, 3);
+                printf("The Digitis is %d\n", classfiyresult);
+                break;
+            }
+            flushmessage(EX_KEY);
+            Sleep(30);
+        }
+
+        // 关闭图形窗口
+        closegraph();
+        return 0;
+    }
 }
