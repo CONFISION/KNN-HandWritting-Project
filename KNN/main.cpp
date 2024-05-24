@@ -531,7 +531,7 @@ int main()
             strcat(filename, ptr->d_name);
             lable[cur] = Get_FileLable(ptr->d_name);
             afterlable[cur] = DEFAULT_KNN_ALGORITHMS(pTrain, filename);
-            printf("loartestDigits.. %d\n", cur);
+            printf("loartestDigits.. %d/945\n", cur);
             memset(filename, 0, sizeof(char));
             ptr = readdir(dir);
             cur++;
